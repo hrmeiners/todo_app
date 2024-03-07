@@ -13,7 +13,7 @@ features = ["json"]
 
 [dependencies.sqlx]
 version = "0.7.3"
-features = ["runtime-tokio", "tls-native-tls", "postgres", "macros", "migrate"]
+features = ["runtime-tokio", "tls-native-tls", "any", "macros", "migrate"]
 
 [dependencies.rocket_db_pools]
 version = "0.1.0-rc.2"

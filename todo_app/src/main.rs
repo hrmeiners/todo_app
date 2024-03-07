@@ -24,7 +24,6 @@ struct TaskId {
     id: i64
 }
 
-
 #[derive(Database)]
 #[database("todo")]
 struct TodoDatabase(sqlx::PgPool);
@@ -54,11 +53,12 @@ impl From<rocket_db_pools::sqlx::Error> for DatabaseError {
 async fn add_task(task: Json<TaskItem<'_>>, mut db: Connection<TodoDatabase>) -> Result<Json<Task>, DatabaseError> {
     let added_task = sqlx::query_as::<_, Task>("INSERT INTO tasks (item) VALUES ($1) RETURNING *")
         .bind(task.item)
-        .fetch_one(&mut *db)
+        .fetch_one(&mut **db)
         .await?;
 
     Ok(Json(added_task))
 }
+
 
 /*
     read_tasks notes
@@ -68,7 +68,7 @@ async fn add_task(task: Json<TaskItem<'_>>, mut db: Connection<TodoDatabase>) ->
 #[get("/readtasks")]
 async fn read_tasks(mut db: Connection<TodoDatabase>) -> Result<Json<Vec<Task>>, DatabaseError> {
     let all_tasks = sqlx::query_as::<_, Task>("SELECT * FROM tasks")
-        .fetch_all(&mut *db)
+        .fetch_all(&mut **db)
         .await?;
         
     Ok(Json(all_tasks))
@@ -84,7 +84,7 @@ async fn edit_task(task_update: Json<Task>, mut db: Connection<TodoDatabase>) ->
     let updated_task = sqlx::query_as::<_, Task>("UPDATE tasks SET item = $1 WHERE id = $2 RETURNING *")
     .bind(&task_update.item)
     .bind(task_update.id)
-    .fetch_one(&mut *db)
+    .fetch_one(&mut **db)
     .await?;
 
     Ok(Json(updated_task))
@@ -98,7 +98,7 @@ async fn edit_task(task_update: Json<Task>, mut db: Connection<TodoDatabase>) ->
 async fn delete_task(task_id: Json<TaskId>, mut db: Connection<TodoDatabase>) -> Result<Json<Task>, DatabaseError> {
     let deleted_task = sqlx::query_as::<_, Task>("DELETE FROM tasks WHERE id = $1 RETURNING *")
         .bind(task_id.id)
-        .fetch_one(&mut *db)
+        .fetch_one(&mut **db)
         .await?;
         
     Ok(Json(deleted_task))
